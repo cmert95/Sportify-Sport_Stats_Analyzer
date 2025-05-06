@@ -13,3 +13,11 @@ env/
 
 data/*
 !data/.gitkeep
+
+.ruff_cache/
+
+.terraform/
+**/.terraform/
+terraform.tfstate
+terraform.tfstate.backup
+*.tfvars
