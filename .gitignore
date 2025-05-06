@@ -1,0 +1,15 @@
+__pycache__/
+*.pyc
+*.pyd
+*.env
+.env
+
+venv/
+.venv/
+ENV/
+env/
+
+.vscode/
+
+data/*
+!data/.gitkeep
