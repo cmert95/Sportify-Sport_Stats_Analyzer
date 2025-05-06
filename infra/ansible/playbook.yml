@@ -1,0 +1,40 @@
+- name: Configure EC2 for football app
+  hosts: app
+  become: true
+
+  vars:
+    app_dir: /home/ubuntu/app
+    venv_dir: /home/ubuntu/app/venv
+
+  tasks:
+    - name: Update apt
+      apt:
+        update_cache: yes
+
+    - name: Install pip and venv
+      apt:
+        name:
+          - python3
+          - python3-pip
+          - python3-venv
+        state: present
+
+    - name: Create application directory
+      file:
+        path: "{{ app_dir }}"
+        state: directory
+        mode: '0755'
+        owner: ubuntu
+        group: ubuntu
+
+    - name: Copy "src" files
+      copy:
+        src: ../../src/
+        dest: "{{ app_dir }}/"
+        owner: ubuntu
+        group: ubuntu
+
+    - name: Create venv
+      command: python3 -m venv "{{ venv_dir }}"
+      args:
+        creates: "{{ venv_dir }}"
