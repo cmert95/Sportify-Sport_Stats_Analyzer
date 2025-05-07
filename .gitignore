@@ -11,8 +11,10 @@ env/
 
 .vscode/
 
-data/*
-!data/.gitkeep
+src/data/**
+!src/data/raw/
+!src/data/.gitkeep
+!src/data/raw/.gitkeep
 
 .ruff_cache/
 
