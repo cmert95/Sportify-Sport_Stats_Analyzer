@@ -2,9 +2,9 @@ import json
 import os
 import time
 
-from fetch_api_data import fetch_bundesliga_season_matches
-
 from config import LATEST_SEASON, SEASON_COUNT
+from fetch_api_data import fetch_bundesliga_season_matches
+from utils.paths import DATA_RAW_DIR
 
 
 def fetch_and_save_all_seasons():
@@ -13,8 +13,8 @@ def fetch_and_save_all_seasons():
         if not matches:
             continue
 
-        os.makedirs("data/raw", exist_ok=True)
-        path = f"data/raw/bundesliga_{year}.json"
+        os.makedirs(DATA_RAW_DIR, exist_ok=True)
+        path = os.path.join(DATA_RAW_DIR, f"bundesliga_{year}.json")
         with open(path, "w", encoding="utf-8") as f:
             for match in matches:
                 json.dump(match, f)
