@@ -1,11 +1,8 @@
-from fetch_api_data import fetch_leagues
+from combine_seasons import fetch_and_save_all_seasons
 
 
 def main():
-    data = fetch_leagues()
-
-    print("Top-level keys:", data.keys())
-    print("Sample:", data["response"][0])
+    fetch_and_save_all_seasons()
 
 
 if __name__ == "__main__":

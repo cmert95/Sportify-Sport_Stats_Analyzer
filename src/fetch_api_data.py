@@ -1,14 +1,14 @@
 import requests
 
-from config import API_BASE_URL, API_KEY
+from config import OPENLIGADB_BASE_URL
 
 
-def fetch_leagues():
-    url = f"{API_BASE_URL}/leagues"
-    headers = {"x-apisports-key": API_KEY}
-    response = requests.get(url, headers=headers)
-
-    if response.status_code == 200:
+def fetch_bundesliga_season_matches(season_year: int) -> list:
+    url = f"{OPENLIGADB_BASE_URL}/getmatchdata/bl1/{season_year}"
+    try:
+        response = requests.get(url, timeout=10)
+        response.raise_for_status()
         return response.json()
-    else:
-        raise Exception(f"API Error: {response.status_code} - {response.text}")
+    except Exception as e:
+        print(f"[{season_year}] Fetch failed: {e}")
+        return []

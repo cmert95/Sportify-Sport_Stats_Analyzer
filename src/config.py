@@ -1,8 +1,5 @@
-import os
+OPENLIGADB_BASE_URL = "https://api.openligadb.de"
 
-from dotenv import load_dotenv
-
-load_dotenv()
-
-API_BASE_URL = "https://v3.football.api-sports.io"
-API_KEY = os.getenv("API_KEY")
+# How many seasons to fetch
+SEASON_COUNT = 20
+LATEST_SEASON = 2023
