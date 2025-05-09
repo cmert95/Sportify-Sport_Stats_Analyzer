@@ -1,9 +1,32 @@
 import os
 
 from pyspark.sql import SparkSession
-from pyspark.sql.functions import col, to_timestamp, when
+from pyspark.sql.functions import col, to_timestamp, trim, when
+from pyspark.sql.types import StringType, StructType
 
 from utils.paths import DATA_BRONZE_DIR, DATA_SILVER_DIR
+
+
+def normalize_all_strings_recursive(df, schema=None, prefix=""):
+    """
+    Recursively converts empty strings to null in all StringType columns.
+    Works for both flat and nested struct fields.
+    """
+    if schema is None:
+        schema = df.schema
+
+    for field in schema.fields:
+        field_name = f"{prefix}.{field.name}" if prefix else field.name
+
+        if isinstance(field.dataType, StringType):
+            df = df.withColumn(
+                field_name, when(trim(col(field_name)) == "", None).otherwise(col(field_name))
+            )
+
+        elif isinstance(field.dataType, StructType):
+            df = normalize_all_strings_recursive(df, field.dataType, field_name)
+
+    return df
 
 
 def filter_invalid_rows(df):
@@ -42,6 +65,7 @@ def clean_bronze_data():
     df = spark.read.parquet(input_path)
     initial_count = df.count()
 
+    df = normalize_all_strings_recursive(df)
     df = filter_invalid_rows(df)
     df = apply_transformations(df)
 
