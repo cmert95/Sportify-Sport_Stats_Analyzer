@@ -15,10 +15,12 @@ env/
 data/**
 !data/raw/
 !data/bronze/
+!data/silver/
 
 !data/.gitkeep
 !data/raw/.gitkeep
 !data/bronze/.gitkeep
+!data/silver/.gitkeep
 
 *.tfvars
 .terraform/
