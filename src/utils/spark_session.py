@@ -2,7 +2,7 @@ from pyspark.sql import SparkSession
 
 from utils.logger import setup_logger
 
-logger = setup_logger(name=__name__, log_file="logs/spark_session.log")
+logger = setup_logger(name=__name__, log_name="spark_session")
 
 
 def get_spark_session(app_name="MyProject", master="local[1]") -> SparkSession:
