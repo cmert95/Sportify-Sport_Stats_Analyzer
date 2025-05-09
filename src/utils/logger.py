@@ -1,15 +1,16 @@
 import logging
+import os
+
+from utils.paths import LOG_DIR
 
 
-def setup_logger(name="default", log_name=None, level=logging.INFO):
+def setup_logger(name=__name__, log_name="app", level=logging.INFO):
     """
     Sets up and returns a logger instance with file and console handlers.
     If log_name is provided, log will be written to logs/{log_name}.log
     """
-    if log_name is None:
-        log_file = "logs/app.log"
-    else:
-        log_file = f"logs/{log_name}.log"
+    log_file = os.path.join(LOG_DIR, f"{log_name}.log")
+    os.makedirs(os.path.dirname(log_file), exist_ok=True)
 
     formatter = logging.Formatter("%(asctime)s — %(levelname)s — %(name)s — %(message)s")
 

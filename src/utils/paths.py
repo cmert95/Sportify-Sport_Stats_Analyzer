@@ -8,3 +8,6 @@ DATA_RAW_DIR = os.path.join(PROJECT_ROOT, "data", "raw")
 DATA_BRONZE_DIR = os.path.join(PROJECT_ROOT, "data", "bronze")
 DATA_SILVER_DIR = os.path.join(PROJECT_ROOT, "data", "silver")
 DATA_GOLD_DIR = os.path.join(PROJECT_ROOT, "data", "gold")
+
+# Logs dir
+LOG_DIR = os.path.join(PROJECT_ROOT, "logs")
