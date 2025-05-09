@@ -22,6 +22,9 @@ data/**
 !data/bronze/.gitkeep
 !data/silver/.gitkeep
 
+logs/*
+!logs/.gitkeep
+
 *.tfvars
 .terraform/
 **/.terraform/
