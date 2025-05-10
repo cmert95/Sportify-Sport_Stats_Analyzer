@@ -1,5 +1,5 @@
 OPENLIGADB_BASE_URL = "https://api.openligadb.de"
 
-# How many seasons to fetch
+LEAGUE_SHORTCUT = "bl1"
 SEASON_COUNT = 20
 LATEST_SEASON = 2023
