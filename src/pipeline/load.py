@@ -1,8 +1,8 @@
-from combine_seasons import fetch_and_save_all_seasons
+from combine_seasons import save_all_seasons_to_json
 
 
 def main():
-    fetch_and_save_all_seasons()
+    save_all_seasons_to_json()
 
 
 if __name__ == "__main__":
