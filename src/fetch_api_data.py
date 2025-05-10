@@ -1,14 +1,26 @@
 import requests
 
-from config import OPENLIGADB_BASE_URL
+from config import LEAGUE_SHORTCUT, OPENLIGADB_BASE_URL
+from utils.logger import setup_logger
+
+logger = setup_logger(__name__, log_name="fetch_data")
 
 
-def fetch_bundesliga_season_matches(season_year: int) -> list:
-    url = f"{OPENLIGADB_BASE_URL}/getmatchdata/bl1/{season_year}"
+def fetch_bundesliga_season_matches(season):
+    url = f"{OPENLIGADB_BASE_URL}/getmatchdata/{LEAGUE_SHORTCUT}/{season}"
+    logger.info(f"[{season}] Fetching match data from: {url}")
+
     try:
         response = requests.get(url, timeout=10)
         response.raise_for_status()
-        return response.json()
+        matches = response.json()
+        logger.info(f"[{season}] Successfully fetched {len(matches)} matches")
+        return matches
+
+    except requests.exceptions.RequestException as e:
+        logger.error(f"[{season}] Failed to fetch match data: {e}")
+        return []
+
     except Exception as e:
-        print(f"[{season_year}] Fetch failed: {e}")
+        logger.error(f"[{season}] Unexpected error: {e}")
         return []
