@@ -16,11 +16,15 @@ data/**
 !data/raw/
 !data/bronze/
 !data/silver/
+!data/gold/
+!data/preview/
 
 !data/.gitkeep
 !data/raw/.gitkeep
 !data/bronze/.gitkeep
 !data/silver/.gitkeep
+!data/gold/.gitkeep
+!data/preview/.gitkeep
 
 logs/*
 !logs/.gitkeep
