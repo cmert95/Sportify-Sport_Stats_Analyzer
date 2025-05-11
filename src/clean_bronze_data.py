@@ -1,17 +1,17 @@
 import os
 
-from pyspark.sql import SparkSession
 from pyspark.sql.functions import col, to_timestamp, trim, when
 from pyspark.sql.types import StringType, StructType
 
+from utils.logger import setup_logger
 from utils.paths import DATA_BRONZE_DIR, DATA_SILVER_DIR
+from utils.spark_session import get_spark_session
+
+logger = setup_logger(__name__, log_name="clean_data")
 
 
 def normalize_all_strings_recursive(df, schema=None, prefix=""):
-    """
-    Recursively converts empty strings to null in all StringType columns.
-    Works for both flat and nested struct fields.
-    """
+    """Recursively converts empty strings to null in all StringType columns."""
     if schema is None:
         schema = df.schema
 
@@ -22,7 +22,6 @@ def normalize_all_strings_recursive(df, schema=None, prefix=""):
             df = df.withColumn(
                 field_name, when(trim(col(field_name)) == "", None).otherwise(col(field_name))
             )
-
         elif isinstance(field.dataType, StructType):
             df = normalize_all_strings_recursive(df, field.dataType, field_name)
 
@@ -53,29 +52,33 @@ def apply_transformations(df):
 
 
 def log_counts(before, after):
-    print(f"Rows before cleaning: {before}, after cleaning: {after}")
+    logger.info(f"Rows before cleaning: {before}, after cleaning: {after}")
 
 
 def clean_bronze_data():
-    spark = SparkSession.builder.appName("Clean Bronze Data").getOrCreate()
+    spark = get_spark_session("Clean Bronze Data")
 
     input_path = os.path.join(DATA_BRONZE_DIR, "bundesliga_combined.parquet")
     output_path = os.path.join(DATA_SILVER_DIR, "clean_matches.parquet")
 
-    df = spark.read.parquet(input_path)
-    initial_count = df.count()
+    try:
+        df = spark.read.parquet(input_path)
+        initial_count = df.count()
 
-    df = normalize_all_strings_recursive(df)
-    df = filter_invalid_rows(df)
-    df = apply_transformations(df)
+        df = normalize_all_strings_recursive(df)
+        df = filter_invalid_rows(df)
+        df = apply_transformations(df)
 
-    final_count = df.count()
-    log_counts(initial_count, final_count)
+        final_count = df.count()
+        log_counts(initial_count, final_count)
 
-    os.makedirs(DATA_SILVER_DIR, exist_ok=True)
-    df.write.mode("overwrite").parquet(output_path)
+        os.makedirs(DATA_SILVER_DIR, exist_ok=True)
+        df.write.mode("overwrite").parquet(output_path)
 
-    print(f"Cleaned silver data written to: {output_path}")
-    df.select(
-        "matchID", "matchDateTimeUTC", "team1.teamName", "team2.teamName", "numberOfViewers"
-    ).show(3, truncate=False)
+        logger.info(f"Cleaned silver data written to: {output_path}")
+        df.select(
+            "matchID", "matchDateTimeUTC", "team1.teamName", "team2.teamName", "numberOfViewers"
+        ).show(5, truncate=False)
+
+    except Exception as e:
+        logger.error(f"Failed to clean bronze data: {e}")
