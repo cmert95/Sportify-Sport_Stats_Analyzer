@@ -5,7 +5,6 @@ from pyspark.sql.types import StringType, StructType
 
 from utils.logger import setup_logger
 from utils.paths import DATA_BRONZE_DIR, DATA_SILVER_DIR
-from utils.spark_session import get_spark_session
 
 logger = setup_logger(__name__, log_name="clean_data")
 
@@ -55,9 +54,7 @@ def log_counts(before, after):
     logger.info(f"Rows before cleaning: {before}, after cleaning: {after}")
 
 
-def clean_bronze_data():
-    spark = get_spark_session("Clean Bronze Data")
-
+def clean_bronze_data(spark):
     input_path = os.path.join(DATA_BRONZE_DIR, "bundesliga_combined.parquet")
     output_path = os.path.join(DATA_SILVER_DIR, "clean_matches.parquet")
 

@@ -3,14 +3,11 @@ import os
 from utils.logger import setup_logger
 from utils.paths import DATA_BRONZE_DIR, DATA_RAW_DIR
 from utils.schema import match_schema
-from utils.spark_session import get_spark_session
 
 logger = setup_logger(name=__name__, log_name="combine_raw")
 
 
-def combine_raw_json_to_bronze():
-    spark = get_spark_session("Combine Raw JSON to Bronze")
-
+def combine_raw_json_to_bronze(spark):
     input_pattern = os.path.join(DATA_RAW_DIR, "bundesliga_*.json")
     output_path = os.path.join(DATA_BRONZE_DIR, "bundesliga_combined.parquet")
 
