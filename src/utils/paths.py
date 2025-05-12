@@ -1,14 +1,17 @@
-import os
+from pathlib import Path
 
-# Project base file dir
-PROJECT_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
+# Project root directory (2 seviye yukarı: utils → src → project root)
+PROJECT_ROOT = Path(__file__).resolve().parents[2]
 
-# Data file dir
-DATA_RAW_DIR = os.path.join(PROJECT_ROOT, "data", "raw")
-DATA_BRONZE_DIR = os.path.join(PROJECT_ROOT, "data", "bronze")
-DATA_SILVER_DIR = os.path.join(PROJECT_ROOT, "data", "silver")
-DATA_GOLD_DIR = os.path.join(PROJECT_ROOT, "data", "gold")
-DATA_PREVIEW_DIR = os.path.join(PROJECT_ROOT, "data", "preview")
+# Data directories
+DATA_RAW_DIR = PROJECT_ROOT / "data" / "raw"
+DATA_BRONZE_DIR = PROJECT_ROOT / "data" / "bronze"
+DATA_SILVER_DIR = PROJECT_ROOT / "data" / "silver"
+DATA_GOLD_DIR = PROJECT_ROOT / "data" / "gold"
+DATA_PREVIEW_DIR = PROJECT_ROOT / "data" / "preview"
 
-# Logs dir
-LOG_DIR = os.path.join(PROJECT_ROOT, "logs")
+# Logs directory
+LOG_DIR = PROJECT_ROOT / "logs"
+
+# Settings file
+SETTINGS_PATH = PROJECT_ROOT / "config" / "settings.yaml"
