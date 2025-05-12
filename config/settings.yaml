@@ -1,0 +1,18 @@
+api:
+  base_url: "https://api.openligadb.de"
+  league_shortcut: "bl1"
+  season_count: 20
+  latest_season: 2023
+
+spark:
+  app_name: "BundesligaDataPipeline"
+  master: "local[*]"
+
+  # Default settings optimized for AWS EC2 t2.micro/t3.micro
+  driver_memory: "512m"
+  executor_memory: "512m"
+  shuffle_partitions: 2
+
+  # Optional extra Spark configurations
+  extra_configs:
+    spark.sql.files.maxPartitionBytes: "134217728"
