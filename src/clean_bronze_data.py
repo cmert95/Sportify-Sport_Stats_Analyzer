@@ -49,13 +49,13 @@ def filter_invalid_rows(df):
 def apply_transformations(df):
     df = normalize_all_strings_recursive(df)
 
-    # Convert datetime strings to timestamp
+    # Convert string columns to timestamp where applicable
     timestamp_cols = ["matchDateTime", "matchDateTimeUTC", "lastUpdateDateTime"]
     for ts_col in timestamp_cols:
         if ts_col in df.columns:
             df = df.withColumn(ts_col, to_timestamp(col(ts_col)))
 
-    # Cast fields
+    # Cast specific fields to appropriate types
     if "numberOfViewers" in df.columns:
         df = df.withColumn("numberOfViewers", col("numberOfViewers").cast("int"))
     if "matchIsFinished" in df.columns:
@@ -66,10 +66,24 @@ def apply_transformations(df):
         if struct_col in df.columns:
             df = flatten_struct_column(df, struct_col, struct_col)
 
-    # Explode + flatten array<struct> fields
+    # Flatten exploded array<struct> fields
     for array_col, prefix in [("goals", "goal"), ("matchResults", "result")]:
         if array_col in df.columns and isinstance(df.schema[array_col].dataType, ArrayType):
             df = explode_and_flatten_array(df, array_col, prefix)
+
+    if "timeZoneID" in df.columns:
+        df = df.drop("timeZoneID")
+
+    # Drop columns with more than 80% missing values
+    threshold = 0.8
+    total_rows = df.count()
+    for column in df.columns:
+        null_count = df.filter(col(column).isNull()).count()
+        if null_count / total_rows > threshold:
+            df = df.drop(column)
+
+    # Remove duplicates based on matchID
+    df = df.dropDuplicates(["matchID"])
 
     return df
 
