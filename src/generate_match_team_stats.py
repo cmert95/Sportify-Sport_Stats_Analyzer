@@ -1,6 +1,6 @@
 import os
 
-from pyspark.sql.functions import lit
+from pyspark.sql.functions import col, dayofweek, lit, month, when, year
 
 from utils.logger import setup_logger
 from utils.paths import DATA_GOLD_DIR, DATA_SILVER_DIR
@@ -40,6 +40,38 @@ def transform_to_team_perspective(df):
     return team1_df.unionByName(team2_df)
 
 
+def add_additional_features(df):
+    df = (
+        df
+        # Goal difference for the team in the match
+        .withColumn("goalDifference", col("goalsFor") - col("goalsAgainst"))
+        # Match result classification based on goals
+        .withColumn(
+            "matchOutcome",
+            when(col("goalsFor") > col("goalsAgainst"), "win")
+            .when(col("goalsFor") < col("goalsAgainst"), "loss")
+            .otherwise("draw"),
+        )
+        # Extract the year of the match
+        .withColumn("matchYear", year("matchDateTimeUTC"))
+        # Extract the month of the match
+        .withColumn("matchMonth", month("matchDateTimeUTC"))
+        # Determine whether the match was played on a weekend
+        .withColumn(
+            "isWeekend",
+            when(dayofweek("matchDateTimeUTC").isin([1, 7]), lit(True)).otherwise(lit(False)),
+        )
+        # Categorize matches by goals scored (high, low, normal)
+        .withColumn(
+            "scoringCategory",
+            when((col("goalsFor") + col("goalsAgainst")) >= 5, "high")
+            .when((col("goalsFor") + col("goalsAgainst")) <= 1, "low")
+            .otherwise("normal"),
+        )
+    )
+    return df
+
+
 def write_gold_data(df):
     output_path = os.path.join(DATA_GOLD_DIR, "match_team_stats.parquet")
     logger.info(f"Writing gold data to {output_path}")
@@ -49,5 +81,6 @@ def write_gold_data(df):
 def run_gold_generation(spark):
     silver_df = read_silver_data(spark)
     gold_df = transform_to_team_perspective(silver_df)
-    write_gold_data(gold_df)
+    enriched_df = add_additional_features(gold_df)
+    write_gold_data(enriched_df)
     logger.info("Gold data successfully written.")
