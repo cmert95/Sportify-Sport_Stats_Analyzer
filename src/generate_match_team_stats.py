@@ -68,6 +68,43 @@ def add_additional_features(df):
             .when((col("goalsFor") + col("goalsAgainst")) <= 1, "low")
             .otherwise("normal"),
         )
+        # Match type: 'derby' if both teams have same ID, else home or away
+        .withColumn(
+            "matchType",
+            when(col("teamID") == col("opponentID"), "derby")
+            .when(col("isHome"), "home")
+            .otherwise("away"),
+        )
+        # Total number of goals in the match
+        .withColumn("totalGoals", col("goalsFor") + col("goalsAgainst"))
+        # Goalless draw: match ended 0–0
+        .withColumn(
+            "goallessDraw",
+            when((col("goalsFor") == 0) & (col("goalsAgainst") == 0), lit(True)).otherwise(
+                lit(False)
+            ),
+        )
+        # Match intensity: combined goals + away indicator
+        .withColumn(
+            "matchIntensity",
+            when((col("totalGoals") >= 5) & (~col("isHome")), "high_away")
+            .when(col("totalGoals") >= 5, "high")
+            .otherwise("normal"),
+        )
+        # Blowout: goal difference ≥ 3
+        .withColumn(
+            "isBlowout",
+            when((col("goalDifference") >= 3) | (col("goalDifference") <= -3), lit(True)).otherwise(
+                lit(False)
+            ),
+        )
+        # Points awarded based on match outcome
+        .withColumn(
+            "points",
+            when(col("matchOutcome") == "win", 3)
+            .when(col("matchOutcome") == "draw", 1)
+            .otherwise(0),
+        )
     )
     return df
 
