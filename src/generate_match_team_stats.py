@@ -1,17 +1,29 @@
-import os
+from pathlib import Path
 
 from pyspark.sql.functions import col, dayofweek, lit, month, when, year
+from pyspark.sql.utils import AnalysisException
 
 from utils.logger import setup_logger
 from utils.paths import DATA_GOLD_DIR, DATA_SILVER_DIR
 
-logger = setup_logger(__name__, log_name="generate_gold")
+logger = setup_logger(__name__, log_name="generate_match_team_stats")
 
 
 def read_silver_data(spark):
-    input_path = os.path.join(DATA_SILVER_DIR, "clean_matches.parquet")
-    logger.info(f"Reading silver data from {input_path}")
-    return spark.read.parquet(input_path)
+    try:
+        input_path = Path(DATA_SILVER_DIR) / "clean_matches.parquet"
+        logger.info(f"Reading silver data from {input_path}")
+        df = spark.read.parquet(str(input_path))
+        if df.rdd.isEmpty():
+            logger.warning("Silver data is empty. Aborting pipeline.")
+            return None
+        return df
+    except AnalysisException as e:
+        logger.error(f"Failed to read silver data: {e}")
+        return None
+    except Exception as e:
+        logger.exception(f"Unexpected error while reading silver data: {e}")
+        return None
 
 
 def transform_to_team_perspective(df):
@@ -41,11 +53,12 @@ def transform_to_team_perspective(df):
 
 
 def add_additional_features(df):
+    logger.info("Adding additional features to match data")
     df = (
         df
-        # Goal difference for the team in the match
+        # Goal difference for the team in the match (positive: win, negative: loss)
         .withColumn("goalDifference", col("goalsFor") - col("goalsAgainst"))
-        # Match result classification based on goals
+        # Match result classification based on goals: win / loss / draw
         .withColumn(
             "matchOutcome",
             when(col("goalsFor") > col("goalsAgainst"), "win")
@@ -56,12 +69,12 @@ def add_additional_features(df):
         .withColumn("matchYear", year("matchDateTimeUTC"))
         # Extract the month of the match
         .withColumn("matchMonth", month("matchDateTimeUTC"))
-        # Determine whether the match was played on a weekend
+        # Determine whether the match was played on a weekend (1 = Sunday, 7 = Saturday)
         .withColumn(
             "isWeekend",
             when(dayofweek("matchDateTimeUTC").isin([1, 7]), lit(True)).otherwise(lit(False)),
         )
-        # Categorize matches by goals scored (high, low, normal)
+        # Categorize matches by total number of goals scored: high (≥5), low (≤1), or normal
         .withColumn(
             "scoringCategory",
             when((col("goalsFor") + col("goalsAgainst")) >= 5, "high")
@@ -110,14 +123,26 @@ def add_additional_features(df):
 
 
 def write_gold_data(df):
-    output_path = os.path.join(DATA_GOLD_DIR, "match_team_stats.parquet")
-    logger.info(f"Writing gold data to {output_path}")
-    df.write.mode("overwrite").parquet(output_path)
+    try:
+        if df is None or df.rdd.isEmpty():
+            logger.warning("Gold DataFrame is empty. Skipping write.")
+            return
+
+        output_path = Path(DATA_GOLD_DIR) / "match_team_stats.parquet"
+        logger.info(f"Writing gold data to {output_path}")
+        df.write.mode("overwrite").parquet(str(output_path))
+    except Exception as e:
+        logger.exception(f"Failed to write gold data: {e}")
 
 
-def run_gold_generation(spark):
+def run_match_team_stats(spark):
+    logger.info("Starting match team stats generation...")
     silver_df = read_silver_data(spark)
+    if silver_df is None:
+        logger.error("Silver data is missing. Terminating process.")
+        return
+
     gold_df = transform_to_team_perspective(silver_df)
     enriched_df = add_additional_features(gold_df)
     write_gold_data(enriched_df)
-    logger.info("Gold data successfully written.")
+    logger.info("Match_team_stats written successfully.")
