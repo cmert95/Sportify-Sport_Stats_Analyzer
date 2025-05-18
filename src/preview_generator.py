@@ -23,8 +23,12 @@ FILES = {
         "path": Path(DATA_SILVER_DIR) / "clean_matches.parquet",
         "limit": 20,
     },
-    "gold": {
+    "gold_match_stats": {
         "path": Path(DATA_GOLD_DIR) / "match_team_stats.parquet",
+        "limit": 100,
+    },
+    "gold_team_summary": {
+        "path": Path(DATA_GOLD_DIR) / "team_season_summary.parquet",
         "limit": 100,
     },
 }
