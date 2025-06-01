@@ -3,8 +3,8 @@ import time
 from pathlib import Path
 from typing import Any
 
+from clients.openligadb_client import fetch_bundesliga_season_matches
 from config import LATEST_SEASON, SEASON_COUNT
-from fetch_api_data import fetch_bundesliga_season_matches
 from utils.logger import setup_logger
 from utils.paths import DATA_RAW_DIR
 
