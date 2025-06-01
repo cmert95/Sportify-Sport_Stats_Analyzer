@@ -5,11 +5,13 @@ from pyspark.sql.utils import AnalysisException
 
 from utils.logger import setup_logger
 from utils.paths import DATA_GOLD_DIR, DATA_SILVER_DIR
+from utils.spark_session import get_spark_session
 
 logger = setup_logger(__name__, log_name="generate_match_team_stats")
 
 
 def read_silver_data(spark):
+    """Reads cleaned match-level data from the silver layer Parquet file."""
     try:
         input_path = Path(DATA_SILVER_DIR) / "clean_matches.parquet"
         logger.info(f"Reading silver data from {input_path}")
@@ -27,6 +29,10 @@ def read_silver_data(spark):
 
 
 def transform_to_team_perspective(df):
+    """
+    Duplicates each match row to reflect both teams' perspectives in separate rows.
+    Adds 'isHome' indicator to distinguish between team1 and team2 views.
+    """
     logger.info("Transforming matches into team-based rows")
 
     base_cols = ["matchID", "matchDateTimeUTC"]
@@ -53,6 +59,10 @@ def transform_to_team_perspective(df):
 
 
 def add_additional_features(df):
+    """
+    Adds analytical and domain-specific features to each team-based row,
+    including match outcome, goal difference, intensity classification, and more.
+    """
     logger.info("Adding additional features to match data")
     df = (
         df
@@ -123,6 +133,7 @@ def add_additional_features(df):
 
 
 def write_gold_data(df):
+    """Writes the transformed and enriched team-level data to the gold layer."""
     try:
         if df is None or df.rdd.isEmpty():
             logger.warning("Gold DataFrame is empty. Skipping write.")
@@ -135,14 +146,25 @@ def write_gold_data(df):
         logger.exception(f"Failed to write gold data: {e}")
 
 
-def run_match_team_stats(spark):
-    logger.info("Starting match team stats generation...")
-    silver_df = read_silver_data(spark)
-    if silver_df is None:
-        logger.error("Silver data is missing. Terminating process.")
-        return
+def run():
+    spark = get_spark_session("Generate Match Team Stats")
+    logger.info("Spark session started")
 
-    gold_df = transform_to_team_perspective(silver_df)
-    enriched_df = add_additional_features(gold_df)
-    write_gold_data(enriched_df)
-    logger.info("Match_team_stats written successfully.")
+    try:
+        silver_df = read_silver_data(spark)
+        if silver_df is None:
+            logger.error("Silver data is missing. Terminating process.")
+            return
+
+        gold_df = transform_to_team_perspective(silver_df)
+        enriched_df = add_additional_features(gold_df)
+        write_gold_data(enriched_df)
+
+        logger.info("Match_team_stats written successfully.")
+    finally:
+        spark.stop()
+        logger.info("Spark session stopped")
+
+
+if __name__ == "__main__":
+    run()
