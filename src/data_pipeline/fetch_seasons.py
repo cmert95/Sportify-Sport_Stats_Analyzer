@@ -7,10 +7,13 @@ from fetch_api_data import fetch_bundesliga_season_matches
 from utils.logger import setup_logger
 from utils.paths import DATA_RAW_DIR
 
-logger = setup_logger(__name__, log_name="combine_seasons")
+logger = setup_logger(__name__, log_name="fetch_seasons")
 
 
-def save_all_seasons_to_json():
+def fetch_and_save_season_data():
+    """
+    Fetches football match data for multiple seasons and saves each season's data as a separate JSON file in the raw data directory.
+    """
     for year in range(LATEST_SEASON - SEASON_COUNT + 1, LATEST_SEASON + 1):
         logger.info(f"[{year}] Requesting match data from API module...")
         matches = fetch_bundesliga_season_matches(year)
@@ -37,4 +40,4 @@ def save_all_seasons_to_json():
 
 
 if __name__ == "__main__":
-    save_all_seasons_to_json()
+    fetch_and_save_season_data()
